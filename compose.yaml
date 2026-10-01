@@ -1,0 +1,16 @@
+services:
+  adguard-cert-setter:
+    build: .
+    image: ruepp/adguard-cert-setter:local
+    restart: unless-stopped
+    environment:
+      APP_USERNAME: ${APP_USERNAME:-admin}
+      APP_PASSWORD_HASH: ${APP_PASSWORD_HASH:?APP_PASSWORD_HASH muss gesetzt sein}
+      APP_COOKIE_SECURE: ${APP_COOKIE_SECURE:-false}
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    volumes:
+      - adguard-cert-data:/data
+
+volumes:
+  adguard-cert-data:
