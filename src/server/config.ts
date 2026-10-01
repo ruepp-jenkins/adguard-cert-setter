@@ -104,12 +104,20 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     file.adguard?.concurrency ?? 5,
     'APP_ADGUARD_CONCURRENCY',
   );
+  const adguardTimeoutMs = envNumber(
+    env.APP_ADGUARD_TIMEOUT_MS,
+    file.adguard?.timeoutMs ?? 10_000,
+    'APP_ADGUARD_TIMEOUT_MS',
+  );
 
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error('APP_PORT must be between 1 and 65535.');
   }
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 50) {
     throw new Error('APP_ADGUARD_CONCURRENCY must be between 1 and 50.');
+  }
+  if (!Number.isInteger(adguardTimeoutMs) || adguardTimeoutMs <= 0) {
+    throw new Error('APP_ADGUARD_TIMEOUT_MS must be a positive integer.');
   }
   if (sessionTtlHours <= 0) throw new Error('The session lifetime must be positive.');
 
@@ -142,11 +150,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     passwordHash,
     sessionTtlMs: sessionTtlHours * 60 * 60 * 1000,
     dataDirectory: resolve(env.APP_DATA_DIR ?? file.storage?.dataDirectory ?? './data'),
-    adguardTimeoutMs: envNumber(
-      env.APP_ADGUARD_TIMEOUT_MS,
-      file.adguard?.timeoutMs ?? 10_000,
-      'APP_ADGUARD_TIMEOUT_MS',
-    ),
+    adguardTimeoutMs,
     deploymentConcurrency: concurrency,
   };
 }

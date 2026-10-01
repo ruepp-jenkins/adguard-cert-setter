@@ -35,5 +35,5 @@ USER node
 EXPOSE 3000
 VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD ["node", "-e", "const https=Boolean(process.env.APP_TLS_CERT_FILE); process.env.NODE_TLS_REJECT_UNAUTHORIZED='0'; fetch(`${https?'https':'http'}://127.0.0.1:${process.env.APP_PORT||3000}/health`).then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+  CMD ["node", "dist/server/healthcheck.js"]
 CMD ["node", "dist/server/main.js"]

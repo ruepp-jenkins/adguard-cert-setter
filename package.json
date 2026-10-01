@@ -16,7 +16,7 @@
     "dev": "concurrently -k -n server,client -c blue,green \"tsx watch src/server/main.ts\" \"vite\"",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
-    "build:server": "tsup src/server/main.ts src/server/cli.ts --format esm --target node22 --out-dir dist/server --clean --sourcemap",
+    "build:server": "tsup src/server/main.ts src/server/cli.ts src/server/healthcheck.ts --format esm --target node22 --out-dir dist/server --clean --sourcemap",
     "start": "node dist/server/main.js",
     "hash-password": "tsx src/server/cli.ts hash-password",
     "typecheck": "tsc --noEmit",

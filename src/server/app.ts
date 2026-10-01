@@ -76,7 +76,7 @@ export function buildApp(config: AppConfig): BuiltApp {
   const app = Fastify({
     ...(tlsOptions ? { https: tlsOptions } : {}),
     bodyLimit: 2_100_000,
-    trustProxy: true,
+    trustProxy: false,
     logger: {
       level: process.env.LOG_LEVEL ?? 'info',
       redact: {
@@ -103,7 +103,6 @@ export function buildApp(config: AppConfig): BuiltApp {
   const version = authVersion(config.passwordHash);
 
   void app.register(cookie);
-  void app.register(rateLimit, { global: false });
   void app.register(helmet, {
     contentSecurityPolicy: {
       directives: {
@@ -112,6 +111,7 @@ export function buildApp(config: AppConfig): BuiltApp {
         styleSrc: ["'self'"],
         imgSrc: ["'self'", 'data:'],
         connectSrc: ["'self'"],
+        upgradeInsecureRequests: config.tls ? [] : null,
       },
     },
   });
@@ -149,34 +149,46 @@ export function buildApp(config: AppConfig): BuiltApp {
 
   app.get('/health', async () => ({ status: 'ok' }));
 
-  app.post(
-    '/api/auth/login',
-    { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
-    async (request, reply) => {
-      const input = loginSchema.parse(request.body);
-      const usernameMatches = safeEqual(input.username, config.username);
-      let passwordMatches = false;
-      try {
-        passwordMatches = await verify(config.passwordHash, input.password);
-      } catch {
-        throw new AppError('The configured password hash is invalid.', 500, 'INVALID_HASH');
-      }
-      if (!usernameMatches || !passwordMatches) {
-        throw new AppError('The username or password is incorrect.', 401, 'LOGIN_FAILED');
-      }
-      const token = randomBytes(32).toString('base64url');
-      database.createSession(token, version, Date.now() + config.sessionTtlMs);
-      return reply
-        .setCookie(sessionCookie, token, {
-          path: '/',
-          httpOnly: true,
-          sameSite: 'strict',
-          secure: config.cookieSecure,
-          maxAge: Math.floor(config.sessionTtlMs / 1000),
-        })
-        .send({ authenticated: true, username: config.username });
-    },
-  );
+  void app.register(async (loginApp) => {
+    await loginApp.register(rateLimit, {
+      global: false,
+      keyGenerator: (request) => request.socket.remoteAddress ?? 'unknown',
+      errorResponseBuilder: (_request, context) =>
+        new AppError(
+          'Too many login attempts. Try again later.',
+          context.statusCode,
+          'RATE_LIMITED',
+        ),
+    });
+    loginApp.post(
+      '/api/auth/login',
+      { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
+      async (request, reply) => {
+        const input = loginSchema.parse(request.body);
+        const usernameMatches = safeEqual(input.username, config.username);
+        let passwordMatches = false;
+        try {
+          passwordMatches = await verify(config.passwordHash, input.password);
+        } catch {
+          throw new AppError('The configured password hash is invalid.', 500, 'INVALID_HASH');
+        }
+        if (!usernameMatches || !passwordMatches) {
+          throw new AppError('The username or password is incorrect.', 401, 'LOGIN_FAILED');
+        }
+        const token = randomBytes(32).toString('base64url');
+        database.createSession(token, version, Date.now() + config.sessionTtlMs);
+        return reply
+          .setCookie(sessionCookie, token, {
+            path: '/',
+            httpOnly: true,
+            sameSite: 'strict',
+            secure: config.cookieSecure,
+            maxAge: Math.floor(config.sessionTtlMs / 1000),
+          })
+          .send({ authenticated: true, username: config.username });
+      },
+    );
+  });
 
   app.post('/api/auth/logout', { preHandler: requireAuth }, async (request, reply) => {
     const token = request.cookies[sessionCookie];

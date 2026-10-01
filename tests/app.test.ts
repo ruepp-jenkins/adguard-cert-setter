@@ -41,6 +41,14 @@ async function login(app: ReturnType<typeof buildApp>['app']): Promise<string> {
 }
 
 describe('authenticated API', () => {
+  it('does not force browser assets from HTTP to HTTPS when TLS is disabled', async () => {
+    const { app } = buildApp(config());
+    const response = await app.inject({ url: '/health' });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-security-policy']).not.toContain('upgrade-insecure-requests');
+    await app.close();
+  });
+
   it('rejects unauthenticated and invalid login attempts', async () => {
     const { app } = buildApp(config());
     expect((await app.inject({ url: '/api/targets' })).statusCode).toBe(401);
@@ -50,6 +58,28 @@ describe('authenticated API', () => {
       payload: { username: 'admin', password: 'wrong' },
     });
     expect(invalid.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('does not trust forwarded client addresses for login rate limiting', async () => {
+    const { app } = buildApp(config());
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/auth/login',
+        headers: { 'x-forwarded-for': `192.0.2.${attempt}` },
+        payload: { username: 'admin', password: 'wrong' },
+      });
+      expect(response.statusCode).toBe(401);
+    }
+
+    const limited = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      headers: { 'x-forwarded-for': '192.0.2.100' },
+      payload: { username: 'admin', password: 'wrong' },
+    });
+    expect(limited.statusCode).toBe(429);
     await app.close();
   });
 
