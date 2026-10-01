@@ -46,14 +46,14 @@ describe('certificate inspection', () => {
         passphrase: 'right',
       })
       .toString();
-    expect(() => inspectCertificate(certificatePem, encrypted, 'wrong')).toThrow(/Passphrase/);
+    expect(() => inspectCertificate(certificatePem, encrypted, 'wrong')).toThrow(/passphrase/i);
     const other = generateKeyPairSync('rsa', { modulusLength: 2048 })
       .privateKey.export({
         type: 'pkcs8',
         format: 'pem',
       })
       .toString();
-    expect(() => inspectCertificate(certificatePem, other)).toThrow(/gehören nicht zusammen/);
+    expect(() => inspectCertificate(certificatePem, other)).toThrow(/do not match/);
   });
 
   it('warns instead of rejecting dates and reads the API fingerprint', () => {
@@ -63,7 +63,7 @@ describe('certificate inspection', () => {
       undefined,
       new Date('2040-01-01'),
     );
-    expect(result.warnings.join(' ')).toContain('abgelaufen');
+    expect(result.warnings.join(' ')).toContain('expired');
     expect(fingerprintFromApiCertificate(Buffer.from(certificatePem).toString('base64'))).toBe(
       result.fingerprint,
     );

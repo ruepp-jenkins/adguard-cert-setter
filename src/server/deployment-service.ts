@@ -59,7 +59,11 @@ export class DeploymentService {
     passphrase?: string;
   }): DeploymentView {
     if (this.activeJobId) {
-      throw new AppError('A certificate deployment is already in progress.', 409, 'DEPLOYMENT_ACTIVE');
+      throw new AppError(
+        'A certificate deployment is already in progress.',
+        409,
+        'DEPLOYMENT_ACTIVE',
+      );
     }
     const targets = this.database.listTargetSecrets();
     if (targets.length === 0) {

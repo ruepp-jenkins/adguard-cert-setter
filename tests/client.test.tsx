@@ -26,7 +26,7 @@ describe('client', () => {
     expect(
       await screen.findByRole('heading', { name: 'AdGuard Home Certificate Setter' }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText('Passwort')).toHaveAttribute('type', 'password');
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
   });
 
   it('shows a persistent warning when target TLS validation is disabled', async () => {
@@ -45,8 +45,8 @@ describe('client', () => {
     );
     render(<App />);
     await waitFor(() =>
-      expect(screen.getByText('TLS-Prüfung ist deaktiviert.')).toBeInTheDocument(),
+      expect(screen.getByText('TLS verification is disabled.')).toBeInTheDocument(),
     );
-    expect(screen.getByRole('button', { name: 'Auf alle 0 Ziele verteilen' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Deploy to all 0 targets' })).toBeDisabled();
   });
 });

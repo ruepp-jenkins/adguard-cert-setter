@@ -1,64 +1,64 @@
 # AdGuard Home Certificate Setter
 
-Eine kleine, deutschsprachige Webanwendung, die ein Zertifikat samt Private Key nach einer gemeinsamen Vorprüfung auf **alle** hinterlegten AdGuard-Home-Instanzen verteilt.
+A small web application that validates a certificate and its private key, then deploys them to **all** configured AdGuard Home instances.
 
-- Quellcode: <https://github.com/ruepp-jenkins/adguard-cert-setter>
-- Container-Image: `ruepp/adguard-cert-setter`
+- Source code: <https://github.com/ruepp-jenkins/adguard-cert-setter>
+- Container image: `ruepp/adguard-cert-setter`
 
-## Funktionen
+## Features
 
-- Beliebig viele AdGuard-Home-Ziele mit URL und Basic-Auth-Zugangsdaten
-- Lokale RSA-/EC-Key-Paar-Prüfung und Entschlüsselung passwortgeschützter Private Keys
-- Zweistufiger Ablauf: erst alle Ziele validieren, dann parallel verteilen
-- Erhalt der vorhandenen TLS-Ports und AdGuard-Einstellungen
-- Fingerprint-Prüfung nach der Installation und Ergebnis je Ziel
-- Ein Admin-Konto mit Argon2id-Passworthash
-- HTTP als Standard oder eingebautes HTTPS mit gemounteten PEM-Dateien
-- Persistente SQLite-Datenbank und Containerbetrieb ohne Root-Rechte
+- Any number of AdGuard Home targets with a URL and Basic Authentication credentials
+- Local RSA/EC key-pair validation and decryption of passphrase-protected private keys
+- Two-stage deployment: validate every target first, then deploy in parallel
+- Preserves existing TLS ports and AdGuard Home settings
+- Verifies the certificate fingerprint after installation and reports the result per target
+- One administrator account secured with an Argon2id password hash
+- HTTP by default or built-in HTTPS with mounted PEM files
+- Persistent SQLite database and a non-root container runtime
 
-## Schnellstart mit Docker Compose
+## Quick start with Docker Compose
 
 ```bash
 docker compose build
 docker run --rm -it ruepp/adguard-cert-setter:local node dist/server/cli.js hash-password
 cp .env.example .env
-# Den erzeugten Hash in .env eintragen.
+# Add the generated hash to .env.
 docker compose up -d
 ```
 
-Danach ist die Anwendung standardmäßig unter `http://localhost:3000` erreichbar.
+The application is then available at `http://localhost:3000` by default.
 
-> Die AdGuard-Passwörter werden entsprechend der gewählten Betriebsanforderung unverschlüsselt in `/data/app.db` gespeichert. Das Volume und seine Backups sind wie Secrets zu behandeln. Zertifikate, Private Keys und deren Passphrasen werden dagegen nie gespeichert.
+> AdGuard Home passwords are stored unencrypted in `/data/app.db` as required by the chosen operating model. Treat the volume and its backups as secrets. Certificates, private keys, and their passphrases are never stored.
 
-## Konfiguration
+## Configuration
 
-Die Anwendung lädt optional `/config/config.yaml`; ein anderer Pfad kann über `APP_CONFIG_FILE` gesetzt werden. Environment-Variablen überschreiben YAML-Werte. Ein vollständiges Beispiel befindet sich in [`config.example.yaml`](config.example.yaml).
+The application optionally loads `/config/config.yaml`. Set `APP_CONFIG_FILE` to use a different path. Environment variables override YAML values. See [`config.example.yaml`](config.example.yaml) for a complete example.
 
-| Environment               | Bedeutung                              | Standard                                 |
-| ------------------------- | -------------------------------------- | ---------------------------------------- |
-| `APP_USERNAME`            | Admin-Benutzername                     | `admin`                                  |
-| `APP_PASSWORD_HASH`       | Erforderlicher Argon2id-Hash           | –                                        |
-| `APP_HOST` / `APP_PORT`   | Listen-Adresse und Port                | `0.0.0.0:3000`                           |
-| `APP_DATA_DIR`            | SQLite-Datenverzeichnis                | `./data` bzw. im Image `/data`           |
-| `APP_PUBLIC_URL`          | Öffentliche URL für die Origin-Prüfung | aktuelle Request-URL                     |
-| `APP_COOKIE_SECURE`       | Cookie ausschließlich über HTTPS       | bei eingebautem HTTPS automatisch `true` |
-| `APP_SESSION_TTL_HOURS`   | Sitzungsdauer                          | `8`                                      |
-| `APP_ADGUARD_TIMEOUT_MS`  | Timeout je API-Aufruf                  | `10000`                                  |
-| `APP_ADGUARD_CONCURRENCY` | Parallele Ziele                        | `5`                                      |
-| `APP_TLS_CERT_FILE`       | Zertifikatskette der App               | –                                        |
-| `APP_TLS_KEY_FILE`        | Private Key der App                    | –                                        |
-| `APP_TLS_KEY_PASSPHRASE`  | Optionale Key-Passphrase               | –                                        |
+| Environment               | Purpose                                 | Default                           |
+| ------------------------- | --------------------------------------- | --------------------------------- |
+| `APP_USERNAME`            | Administrator username                  | `admin`                           |
+| `APP_PASSWORD_HASH`       | Required Argon2id hash                  | –                                 |
+| `APP_HOST` / `APP_PORT`   | Listen address and port                 | `0.0.0.0:3000`                    |
+| `APP_DATA_DIR`            | SQLite data directory                   | `./data`, or `/data` in the image |
+| `APP_PUBLIC_URL`          | Public URL used for origin validation   | Current request URL               |
+| `APP_COOKIE_SECURE`       | Send the session cookie over HTTPS only | `true` with built-in HTTPS        |
+| `APP_SESSION_TTL_HOURS`   | Session lifetime                        | `8`                               |
+| `APP_ADGUARD_TIMEOUT_MS`  | Timeout per API request                 | `10000`                           |
+| `APP_ADGUARD_CONCURRENCY` | Number of parallel target operations    | `5`                               |
+| `APP_TLS_CERT_FILE`       | Application certificate chain           | –                                 |
+| `APP_TLS_KEY_FILE`        | Application private key                 | –                                 |
+| `APP_TLS_KEY_PASSPHRASE`  | Optional application key passphrase     | –                                 |
 
-Es gibt kein Standardpasswort. Das Hash-Kommando liest das Passwort verdeckt vom Terminal oder alternativ von stdin:
+There is no default password. The hash command reads the password without echoing it in an interactive terminal, or from standard input:
 
 ```bash
-printf '%s' 'ein-langes-passwort' | docker run --rm -i ruepp/adguard-cert-setter:local \
+printf '%s' 'a-long-password' | docker run --rm -i ruepp/adguard-cert-setter:local \
   node dist/server/cli.js hash-password
 ```
 
-## Eingebautes HTTPS
+## Built-in HTTPS
 
-Zertifikat und Private Key müssen gemeinsam gesetzt und in den Container gemountet werden:
+The certificate and private key must be configured together and mounted into the container:
 
 ```yaml
 services:
@@ -71,34 +71,34 @@ services:
       - ./certs:/certs:ro
 ```
 
-Ohne diese beiden Einstellungen läuft der Container per HTTP. Da Browser den zu verteilenden Private Key übertragen, sollte HTTP nur in einem entsprechend vertrauenswürdigen internen Netz verwendet werden.
+Without these settings, the container serves HTTP. Because the browser transmits the private key that will be deployed, use HTTP only on a suitably trusted internal network.
 
-## AdGuard-Ziel-URLs
+## AdGuard Home target URLs
 
-Eingaben ohne Schema werden als HTTP interpretiert. Ports und Reverse-Proxy-Pfade sind erlaubt; `/control` darf enthalten sein, wird aber nicht doppelt angehängt. HTTP-Ziele sind möglich, übertragen deren AdGuard-Zugangsdaten jedoch ohne Transportverschlüsselung.
+Values without a scheme are interpreted as HTTP. Ports and reverse-proxy paths are supported. A trailing `/control` is accepted and is not appended twice. HTTP targets are supported, but their AdGuard Home credentials are transmitted without transport encryption.
 
-Die globale Ziel-TLS-Prüfung ist standardmäßig aktiv und kann in der UI mit deutlicher Warnung deaktiviert werden. Die Einstellung betrifft ausschließlich AdGuard-Verbindungen.
+Target TLS verification is enabled globally by default. It can be disabled in the UI after acknowledging a prominent warning. This setting applies only to connections to AdGuard Home.
 
-## Jenkins-Build
+## Jenkins build
 
-Die `Jenkinsfile` baut das Image nativ und parallel für `linux/amd64` und `linux/arm64`. TypeScript-Prüfung, ESLint, Prettier, Produktions-Build und Vitest laufen dabei innerhalb des Docker-Builds; die JUnit-Berichte werden anschließend von Jenkins veröffentlicht. Erst wenn beide Architekturen erfolgreich sind, erzeugt Jenkins das gemeinsame Multi-Arch-Manifest.
+The `Jenkinsfile` builds the image natively and in parallel for `linux/amd64` and `linux/arm64`. TypeScript validation, ESLint, Prettier, the production build, and Vitest run inside the Docker build. Jenkins then publishes the resulting JUnit reports. The combined multi-architecture manifest is created only after both architectures succeed.
 
-Auf `main` und `master` werden folgende Tags nach `ruepp/adguard-cert-setter` veröffentlicht:
+Builds from `main` and `master` publish these tags to `ruepp/adguard-cert-setter`:
 
-- Tagesversion im Format `YYYYMMDD`
+- A daily version in `YYYYMMDD` format
 - `latest`
 
-Andere Branches werden mit `<branch>-YYYYMMDD` nach `ruepp/adguard-cert-setter-test` veröffentlicht. Jenkins benötigt die Agents `docker` für amd64 und `oracle_docker` für arm64, `DOCKER_USERNAME` auf den Agents sowie das Secret-Text-Credential `DOCKER_API_PASSWORD`.
+Other branches publish `<branch>-YYYYMMDD` to `ruepp/adguard-cert-setter-test`. Jenkins requires agents labeled `docker` for amd64 and `oracle_docker` for arm64, `DOCKER_USERNAME` on the agents, and the secret-text credential `DOCKER_API_PASSWORD`.
 
-Der lokale Docker-Testpfad erzeugt dieselben JUnit-Artefakte wie Jenkins:
+The local Docker test path produces the same JUnit artifacts as Jenkins:
 
 ```bash
 ./scripts/test.sh
 ```
 
-`scripts/start.sh` initialisiert zusätzlich Buildx, meldet sich an der Registry an und führt Tests, den nativen Build sowie den Push-by-Digest aus. Es wird normalerweise nur durch Jenkins mit den benötigten Credentials gestartet.
+`scripts/start.sh` also initializes Buildx, signs in to the registry, runs the tests and native build, and pushes the resulting digest. Jenkins normally invokes it with the required credentials.
 
-## Entwicklung und Tests
+## Development and tests
 
 ```bash
 npm ci
@@ -109,4 +109,4 @@ npm test
 npm run build
 ```
 
-Die End-to-End-Tests benötigen einmalig `npx playwright install chromium` und laufen mit `npm run test:e2e`.
+Install Chromium once with `npx playwright install chromium` before running the end-to-end tests with `npm run test:e2e`.

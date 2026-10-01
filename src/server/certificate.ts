@@ -38,11 +38,7 @@ export function inspectCertificate(
 ): InspectedCertificate {
   const blocks = certificatePem.match(certificatePattern);
   if (!blocks?.length) {
-    throw new AppError(
-      'No valid PEM certificate block was found.',
-      422,
-      'INVALID_CERT',
-    );
+    throw new AppError('No valid PEM certificate block was found.', 422, 'INVALID_CERT');
   }
 
   let certificates: X509Certificate[];
@@ -83,11 +79,7 @@ export function inspectCertificate(
     certificatePublicKey.length !== privatePublicKey.length ||
     !timingSafeEqual(certificatePublicKey, privatePublicKey)
   ) {
-    throw new AppError(
-      'The private key and leaf certificate do not match.',
-      422,
-      'KEY_MISMATCH',
-    );
+    throw new AppError('The private key and leaf certificate do not match.', 422, 'KEY_MISMATCH');
   }
 
   const warnings: string[] = [];
@@ -97,9 +89,7 @@ export function inspectCertificate(
     );
   }
   if (at > leaf.validToDate) {
-    warnings.push(
-      `The certificate expired on ${leaf.validToDate.toLocaleString('en-US')}.`,
-    );
+    warnings.push(`The certificate expired on ${leaf.validToDate.toLocaleString('en-US')}.`);
   }
   for (let index = 0; index < certificates.length - 1; index += 1) {
     const child = certificates[index];

@@ -33,7 +33,7 @@ if ! npm run format:check; then
     status=1
 fi
 
-echo "== Produktions-Build"
+echo "== Production build"
 if ! npm run build; then
     build_status=1
     status=1
@@ -84,5 +84,5 @@ EOF
 fi
 
 printf '%s\n' "${status}" > "${OUT}/exit-code"
-echo "== Ergebnis: ${status} (0 = alles grün)"
+echo "== Result: ${status} (0 = all checks passed)"
 exit 0

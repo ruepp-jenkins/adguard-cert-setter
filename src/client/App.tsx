@@ -371,9 +371,7 @@ function SettingsPanel({
       <label className="switch-row">
         <span>
           <strong>Verify target TLS certificates</strong>
-          <small>
-            This can be disabled for self-signed or expired target certificates.
-          </small>
+          <small>This can be disabled for self-signed or expired target certificates.</small>
         </span>
         <input
           type="checkbox"
@@ -427,7 +425,9 @@ function DeploymentPanel({
         <div>
           <h2>Deploy certificate</h2>
           <p className="muted">
-            All {targetCount || 'configured'} targets are checked before deployment.
+            {targetCount > 0
+              ? `All ${targetCount} ${targetCount === 1 ? 'target is' : 'targets are'} checked before deployment.`
+              : 'All configured targets are checked before deployment.'}
           </p>
         </div>
         {active && (
@@ -479,7 +479,9 @@ function DeploymentPanel({
         <div className="submit-row">
           <span className="muted">The private key and passphrase are never stored.</span>
           <button className="primary large" disabled={busy || Boolean(active) || targetCount === 0}>
-            {busy ? 'Preparing …' : `Deploy to all ${targetCount} targets`}
+            {busy
+              ? 'Preparing …'
+              : `Deploy to all ${targetCount} ${targetCount === 1 ? 'target' : 'targets'}`}
           </button>
         </div>
       </form>
@@ -614,7 +616,7 @@ function Dashboard({ session, onLogout }: { session: SessionView; onLogout: () =
             <p>One certificate. Every AdGuard Home instance.</p>
           </div>
           <span className="target-count">
-            <strong>{targets.length}</strong> targets
+            <strong>{targets.length}</strong> {targets.length === 1 ? 'target' : 'targets'}
           </span>
         </div>
         <DeploymentPanel

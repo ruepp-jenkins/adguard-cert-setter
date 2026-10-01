@@ -13,6 +13,6 @@ describe('AdGuard URLs', () => {
     expect(adGuardApiUrl('https://example.test/control', '/status').pathname).toBe(
       '/control/status',
     );
-    expect(() => normalizeBaseUrl('https://user:pass@example.test')).toThrow(/nicht erlaubt/);
+    expect(() => normalizeBaseUrl('https://user:pass@example.test')).toThrow(/not allowed/);
   });
 });

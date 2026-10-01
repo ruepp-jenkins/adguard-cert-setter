@@ -1,12 +1,12 @@
 #!/bin/sh
-# Prüft den laufenden Container, ohne dessen Zustand zu verändern.
+# Checks the running container without changing its state.
 set -eu
 
 SERVICE=${SERVICE:-adguard-cert-setter}
 container_id="$(docker compose ps -q "${SERVICE}")"
 
 if [ -z "${container_id}" ]; then
-    echo "FEHLER: Service ${SERVICE} läuft nicht." >&2
+    echo "ERROR: Service ${SERVICE} is not running." >&2
     exit 1
 fi
 
@@ -15,14 +15,14 @@ health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{
 echo "   ${health}"
 [ "${health}" = "healthy" ]
 
-echo "== Benutzer"
+echo "== User"
 uid="$(docker compose exec -T "${SERVICE}" id -u)"
 echo "   UID ${uid}"
 [ "${uid}" != "0" ]
 
-echo "== Datenbankrechte"
+echo "== Database permissions"
 docker compose exec -T "${SERVICE}" stat -c '   %a %U:%G %n' /data/app.db
 mode="$(docker compose exec -T "${SERVICE}" stat -c '%a' /data/app.db)"
 [ "${mode}" = "600" ]
 
-echo "== fertig"
+echo "== Complete"

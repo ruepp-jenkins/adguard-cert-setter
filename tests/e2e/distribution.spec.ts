@@ -55,22 +55,22 @@ test.afterAll(async () => {
 
 test('logs in, adds a target and distributes a certificate to all targets', async ({ page }) => {
   await page.goto('/');
-  await page.getByLabel('Passwort').fill('test-password-123');
-  await page.getByRole('button', { name: 'Anmelden' }).click();
-  await expect(page.getByRole('heading', { name: 'Zertifikatsverwaltung' })).toBeVisible();
+  await page.getByLabel('Password').fill('test-password-123');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('heading', { name: 'Certificate management' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Ziel hinzufügen' }).click();
+  await page.getByRole('button', { name: 'Add target' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Name', { exact: true }).fill('E2E AdGuard');
-  await dialog.getByLabel('IP oder URL').fill(targetUrl);
-  await dialog.getByLabel('Passwort').fill('secret');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByLabel('IP address or URL').fill(targetUrl);
+  await dialog.getByLabel('Password').fill('secret');
+  await dialog.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('E2E AdGuard')).toBeVisible();
 
-  await page.getByLabel('Zertifikatskette (PEM)').fill(certificatePem);
+  await page.getByLabel('Certificate chain (PEM)').fill(certificatePem);
   await page.getByLabel('Private Key (PEM)').fill(privateKeyPem);
-  await page.getByRole('button', { name: /Auf alle 1 Ziele verteilen/ }).click();
+  await page.getByRole('button', { name: /Deploy to all 1 target/ }).click();
 
-  await expect(page.getByText('Erfolgreich').first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('Successful').first()).toBeVisible({ timeout: 10_000 });
   expect(configureCalls).toBe(1);
 });

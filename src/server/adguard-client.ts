@@ -84,7 +84,11 @@ export class AdGuardClient {
         error instanceof Error && error.name === 'TimeoutError'
           ? 'Request timed out'
           : 'Connection error';
-      throw new AppError(`${reason} while connecting to ${url.origin}.`, 502, 'ADGUARD_UNREACHABLE');
+      throw new AppError(
+        `${reason} while connecting to ${url.origin}.`,
+        502,
+        'ADGUARD_UNREACHABLE',
+      );
     }
 
     const text = await response.text();
