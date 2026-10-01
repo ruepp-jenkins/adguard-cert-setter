@@ -409,9 +409,6 @@ function DeploymentPanel({
         privateKeyPem,
         ...(passphrase ? { passphrase } : {}),
       });
-      setCertificatePem('');
-      setPrivateKeyPem('');
-      setPassphrase('');
       onStarted(job);
     } catch (reason) {
       setError(message(reason));
