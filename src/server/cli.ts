@@ -48,7 +48,7 @@ async function main(): Promise<void> {
     return;
   }
   const password = await readPassword('Password: ');
-  if (password.length < 12) throw new Error('The password must be at least 12 characters long.');
+  if (password.length < 6) throw new Error('The password must be at least 6 characters long.');
   const passwordHash = await hash(password, {
     memoryCost: 19_456,
     timeCost: 2,

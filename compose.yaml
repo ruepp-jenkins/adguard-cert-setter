@@ -1,7 +1,6 @@
 services:
   adguard-cert-setter:
-    build: .
-    image: ruepp/adguard-cert-setter:local
+    image: ruepp/adguard-cert-setter:latest
     restart: unless-stopped
     environment:
       APP_USERNAME: ${APP_USERNAME:-admin}

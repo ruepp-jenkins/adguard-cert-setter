@@ -3,7 +3,7 @@
 A small web application that validates a certificate and its private key, then deploys them to **all** configured AdGuard Home instances.
 
 - Source code: <https://github.com/ruepp-jenkins/adguard-cert-setter>
-- Container image: `ruepp/adguard-cert-setter`
+- Container image: `ruepp/adguard-cert-setter:latest`
 
 ## Features
 
@@ -19,8 +19,7 @@ A small web application that validates a certificate and its private key, then d
 ## Quick start with Docker Compose
 
 ```bash
-docker compose build
-docker run --rm -it ruepp/adguard-cert-setter:local node dist/server/cli.js hash-password
+docker run --rm -it ruepp/adguard-cert-setter:latest node dist/server/cli.js hash-password
 cp .env.example .env
 # Add the generated hash to .env.
 docker compose up -d
@@ -52,7 +51,7 @@ The application optionally loads `/config/config.yaml`. Set `APP_CONFIG_FILE` to
 There is no default password. The hash command reads the password without echoing it in an interactive terminal, or from standard input:
 
 ```bash
-printf '%s' 'a-long-password' | docker run --rm -i ruepp/adguard-cert-setter:local \
+printf '%s' 'a-long-password' | docker run --rm -i ruepp/adguard-cert-setter:latest \
   node dist/server/cli.js hash-password
 ```
 
